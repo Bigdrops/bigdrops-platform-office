@@ -1,54 +1,186 @@
-# Product Requirements Document: BIGDROPS Platform Office
+# Product Requirements Document (PRD)
+
+## Project: BIGDROPS Platform Office (Operations Console)
+
+**Status:** Locked Architecture (Frozen)  
+**Date:** 2026-07-15  
+**Repository path:** `docs/PRD/platform-office-prd.md`  
+**Dependencies:** Multi-Tenancy PRD (v2.1)
+
+---
 
 ## 1. Executive Summary
-The Platform Office is an independent, high-density Operations Console (NOC) designed exclusively for BIGDROPS platform operators. It is the centralized control plane for observing, maintaining, and recovering the multi-tenant BIGDROPS system. 
 
-## 2. Architectural Boundaries & Principles
-- **Application Independence**: The Platform Office is a distinct application from the BIGDROPS ERP. It maintains its own independent build, deployment, and release lifecycle.
-- **Data Isolation (The "No-Cross" Rule)**: 
-    - The Platform Office is strictly prohibited from querying tenant-isolated business schemas (e.g., `invoices`, `waybills`, `projects`).
-    - All operational data is consumed from explicit, platform-wide observability models (State tables/Event streams) residing in the `public` schema.
-- **Operations-First**: The UI is an "Operations OS." The primary entry point is the **Platform Overview (NOC)**, which aggregates system-wide health signals.
-- **Principle of Least Privilege**: Platform operators manage workspace existence and system health, not workspace membership or business-data content.
+The Platform Office is an independent, high-density Operations Console (NOC) designed exclusively for BIGDROPS platform operators. It is the centralized cockpit used to observe, maintain, and recover the multi-tenant BIGDROPS system.
 
-## 3. Operational Domain Definitions
-The Platform Office manages the platform through four distinct domains:
+It is designed as an "Operations OS" rather than a standard admin CRUD panel, prioritizing end-to-end operational workflows, high information density, and strict data isolation.
 
-### A. Lifecycle Orchestration (Provisioning & State)
-- **Role**: Manages the workspace lifecycle via a strictly defined state machine (`Requested`, `AwaitingApproval`, `Provisioning`, `Active`, `Suspended`, `Archived`, `Purged`).
-- **Mechanism**: Operators trigger "Transition Events." The system validates the transition and executes the associated background pipeline. 
-- **Requirement**: No manual editing of rows; only controlled state transitions.
+---
 
-### B. Subscription & Entitlements
-- **Role**: Manages workspace-level billing status and feature access.
-- **Mechanism**: Subscription state is treated as an explicit platform-managed entity, decoupled from ERP business logic.
-- **Capabilities**:
-    - Entitlement Overrides: Modify feature flags/quotas per workspace.
-    - Lifecycle Management: Manual Pause/Resume/Cancel triggers.
-    - Visibility: Proactive churn/renewal monitoring via aggregated dashboard widgets.
+## 2. Fundamental Architectural Boundaries
 
-### C. Incident & Alert Management
-- **Role**: Centralized ledger for system anomalies.
-- **Mechanism**: Operators consume a platform-wide incident feed. Incidents are categorized by severity and status (`open`, `acknowledged`, `resolved`).
+### 2.1 Application Independence
 
-### D. Identity & Security (Auth Realm)
-- **Shared Identity, Bifurcated Auth**: Shares `auth.users` pool for audit integrity but maintains an independent authorization domain.
-- **Security Policy**:
-    - Mandatory, per-app MFA verification (Step-up auth) required upon entering the Platform Office.
-    - Enforced shorter session timeouts for all operator roles.
-    - All actions recorded in a platform-wide `activity_events` audit log.
+- **Decoupled Lifecycle**: The Platform Office is a distinct application from the BIGDROPS ERP. It maintains its own independent build, routing, deployment, and release lifecycle.
+- **Repository Strategy**: Repository organization (monorepo vs. multi-repo) is an implementation detail. Architecturally, the codebases must remain modular and independently deployable.
 
-## 4. Key Operational Modules
-1. **Platform Overview (NOC)**: Entry point. Aggregates "Operational Health" widgets (Provisioning status, Active Incidents, Subscription health, Platform Metrics).
-2. **Provisioning Console**: Workflow engine for approving, suspending, or purging workspaces. Monitors the lifecycle state machine.
-3. **Subscription/Billing Manager**: Control plane for entitlements, plan overrides, and renewal oversight.
-4. **Incident Response**: Workstation for incident triage, acknowledging, and resolving platform-level alerts.
-5. **Operator Toolkit**: Global diagnostics (Search, Feature Flag explorer, Safe-Action Allowlist).
+### 2.2 Data Isolation (The "No-Cross" Rule)
 
-## 5. Security Guardrails
-- **Safe-Action Allowlist**: The console may only invoke pre-approved, non-destructive diagnostic/recovery RPCs. Generic or high-privilege execution is prohibited.
-- **Blast Radius Mitigation**: Platform Office access is limited to the system infrastructure and lifecycle management. It holds no authority over the content (data/users) contained within a workspace.
+> **The Isolation Boundary:** The Platform Office is strictly prohibited from peering into tenant-isolated business schemas (e.g., `workspace_xxxx.invoices`, `waybills`, `projects`). It has zero read/write access to tenant business data.
 
-## 6. Implementation Contract
-- **Explicit State**: System state (Provisioning/Incidents) must be made explicit via `public` tables populated by backend system processes, not inferred through business table introspection.
-- **Auditability**: All operator activity (login, state transitions, subscription changes) is captured in `public.activity_events`. No separate logging tables are to be created for platform access logs.
+**Explicit Metadata Consumption:** The Platform Office reads and interacts *only* with explicit, platform-wide observability models residing in the `public` schema.
+
+```
+
+[public] Schema Only                          [tenant] Isolated Schemas
+• public.workspaces                           • workspace_acme.invoices
+• public.platform_operators                   • workspace_beta.waybills
+• public.entity_provisioning_status           • workspace_gamma.projects
+│                                             │
+▼                                             ▼
+┌───────────────────────┐                     ┌───────────────────────┐
+│    PLATFORM OFFICE    │                     │     BIGDROPS ERP      │
+│ (Operations Console)  │                     │   (Business App)      │
+└───────────────────────┘                     └───────────────────────┘
+
+```
+
+### 2.3 Principle of Least Privilege
+
+- **Infrastructure-Only Scope**: Platform operators manage workspace existence, provisioning health, and system status. They hold zero authority over, or visibility into, workspace membership, internal team roles, or business-data content.
+
+---
+
+## 3. Operational Domain Contract (Integration Boundary)
+
+The Platform Office communicates with the core multi-tenancy engine exclusively through documented backend contracts in the `public` schema. It relies on the following stable entities:
+
+### 3.1 Provisioning Status (`public.entity_provisioning_status`)
+
+Read-only for the Platform Office. This table is written to by backend provisioning pipelines and polled by the console to assess workspace creation health:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `entity_id` | `uuid` (Primary Key) | Unique identifier for the entity |
+| `status` | `text` | `pending`, `creating`, `ready`, `failed`, `purging`, `purged` |
+| `last_error` | `text` | Most recent error message (if any) |
+| `attempt_count` | `integer` | Number of provisioning attempts |
+| `updated_at` | `timestamptz` | Last status update timestamp |
+
+### 3.2 Workspace Status (`public.workspaces.status`)
+
+Monitored to track the broad operational state of tenants:
+
+- Supported states: `pending_approval`, `active`, `suspended`, `archived`
+
+### 3.3 Platform Operators (`public.platform_operators`)
+
+Defines role-based platform authority, completely distinct from ERP workspace-level permissions:
+
+- **Enforced role:** `role = 'owner'` (possesses platform orchestration privileges)
+- **Reserved roles:** `support`, `auditor`, `operations` (future roles, constrained to `public`-schema read-only tables)
+
+### 3.4 Unified Event Log (`public.activity_events`)
+
+All platform-level operations, security events, and console access logs are written to the shared `public.activity_events` ledger for unified audit capability.
+
+---
+
+## 4. Key Functional Domains & Workflows
+
+### 4.1 Platform Overview (NOC Dashboard)
+
+The "Home Screen" of the application. It acts as an aggregation layer that does not own data, but summarizes all other operational domains:
+
+- **System State Widget**: Live health status of the platform.
+- **Orchestration Monitor**: Quick counts of workspaces awaiting approval or experiencing provisioning failures.
+- **Active Incidents**: High-priority alert tracker pulling from the `public.platform_incidents` ledger.
+- **System Volume Indicators**: Aggregated throughput rates without accessing tenant-specific transaction data.
+
+### 4.2 Lifecycle Orchestration (Workspace Workflows)
+
+Operators manage workspaces via controlled transition events rather than direct row-editing:
+
+- **The Approval Path**: Transitioning a workspace from `pending_approval` to `creating`. Initiates the automated `CREATE SCHEMA` backend pipeline, tracking progress through the `entity_provisioning_status` table.
+- **The Lockout Path (Suspension)**: Flipped to instantly lock out a tenant workspace via RLS/global checks at the platform boundary. This is a non-destructive action that leaves business data intact.
+- **The Termination Path (Purge/Archive)**: High-impact actions requiring multi-step verification and explicit confirmation to trigger background teardown pipelines safely.
+
+### 4.3 Subscription & Entitlements
+
+- **Status Modeling**: Track billing status decoupled from the actual payment processors (adhering to the deferred "WinRAR model" for MVP).
+- **Entitlement Overrides**: Direct administrative ability to override system quotas, limits, or enable specific feature flags for a tenant workspace.
+
+### 4.4 Operator Security & Safe-Action Allowlist
+
+- **Centralized Identity, Bifurcated Auth**: Uses the shared `auth.users` identity pool, but isolates console authorization.
+- **MFA Step-Up Gate**: The Platform Office implements its own explicit re-authentication / TOTP challenge at the console entry point, independent of whether the user has an active ERP session.
+- **Console Session Policy**: Shorter session timeouts and mandatory inactivity logouts are enforced application-wide.
+- **Safe-Action Allowlist**: The console is restricted to calling pre-approved, read-only, or non-destructive diagnostic RPCs (e.g., ping tests, health checks). Executing generic, un-sandboxed backend functions is strictly prohibited.
+
+---
+
+## 5. Out-of-Scope Items (Explicitly Excluded)
+
+The following items are explicitly **excluded** from the Platform Office scope:
+
+1. **Direct Billing Integration**: No live Stripe/payment processor configuration hooks are implemented inside the workspace settings (deferred).
+2. **ERP Team Membership**: Operators cannot view individual workspace user accounts, invite workspace staff, or alter granular workspace permissions.
+3. **Data Inspection**: The console will never render a client document (Invoice, Waybill, CSR) or search raw transactional records.
+
+---
+
+## 6. Success Criteria
+
+1. **Data Isolation Enforced**: No Platform Office query ever accesses tenant-isolated schemas. All data consumed originates from `public`-schema observability tables.
+2. **Workspace Lifecycle Managed**: Operators can approve, suspend, and archive workspaces through controlled transition events.
+3. **Provisioning Observability**: Failed provisioning attempts are visible with error details and retry history via `entity_provisioning_status`.
+4. **Audit Completeness**: Every operator action (approve, suspend, archive, entitlement change) is recorded in `public.activity_events`.
+5. **MFA Step-Up Enforced**: Re-authentication / TOTP challenge is required at console entry, independent of ERP session state.
+6. **Safe-Action Allowlist**: Only pre-approved diagnostic RPCs are executable from the console; generic backend function execution is blocked.
+7. **Decoupled Lifecycle**: Platform Office and ERP applications can be built, deployed, and released independently.
+8. **No Business Data Access**: Platform operators never see client names, document numbers, or transaction amounts from tenant schemas.
+
+---
+
+## 7. Dependencies & Open Items
+
+### 7.1 Upstream Dependencies
+
+| Dependency | Owner | Status |
+|------------|-------|--------|
+| `entity_provisioning_status` table | Multi-Tenancy Team | Implemented |
+| `platform_operators` table | Multi-Tenancy Team | Implemented |
+| `workspaces` table (status field) | Multi-Tenancy Team | Implemented |
+| Platform Owner role provisioning | Multi-Tenancy Team | Planned |
+| `public.activity_events` for audit | Audit Team | Implemented |
+
+### 7.2 Open Items
+
+- **Platform Incidents Table**: `public.platform_incidents` is referenced in the NOC Dashboard but not yet defined. This should be implemented by the Platform Office team as a `public`-schema table, following the same observability contract pattern.
+- **Console Session Management**: Implementation of shorter timeouts and inactivity logout policies.
+- **MFA Step-Up Integration**: TOTP challenge implementation at console entry point.
+
+---
+
+## 8. Integration Contract Summary
+
+| Consumer | Producer | Data Exchanged | Direction |
+|----------|----------|----------------|-----------|
+| Platform Office | Multi-Tenancy Engine | `entity_provisioning_status` | Read-only |
+| Platform Office | Multi-Tenancy Engine | `workspaces.status` | Read-only |
+| Platform Office | Multi-Tenancy Engine | `platform_operators` | Read-only |
+| Platform Office | Multi-Tenancy Engine | `workspace_approval` mutation | Write (via RPC) |
+| Platform Office | Platform Office (self) | `activity_events` | Write |
+
+---
+
+## 9. Document Changelog
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | 2026-07-15 | Platform Office Team | Initial locked architecture |
+
+---
+
+This document represents the absolute source of truth for the Platform Office workstream, incorporating the security guardrails, the structural boundaries, and the integration contract agreed upon with the multi-tenancy team.
+```
