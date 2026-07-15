@@ -10,7 +10,7 @@
 
 ## Overview
 
-This repository contains the **BIGDROPS Platform Office**  a dedicated, high-density Operations Console (NOC) for managing and operating the multi-tenant BIGDROPS SaaS engine.
+This repository contains the **BIGDROPS Platform Office** — a dedicated, high-density Operations Console (NOC) for managing and operating the multi-tenant BIGDROPS SaaS engine.
 
 It is designed as an isolated **SaaS control plane**, running independently of the core customer-facing ERP client application, sharing only the underlying Supabase backend and authentication pool while enforcing strict data segregation.
 
@@ -31,30 +31,17 @@ It is designed as an isolated **SaaS control plane**, running independently of t
 
 The Platform Office and the ERP are separate frontend applications that share the same Supabase backend database and authentication pool, but enforce complete segregation of operational duties and data visibility.
 
+### Ecosystem Infrastructure
 
-```
-┌──────────────────────────────┐
-│     BIGDROPS ECOSYSTEM       │
-└──────────────┬───────────────┘
-│
-Shared Supabase Database Instance
-│
-┌──────────────────────┴──────────────────────┐
-▼                                             ▼
-[public] Schema Only                          [tenant] Isolated Schemas
-• public.workspaces                           • workspace_acme.invoices
-• public.platform_operators                   • workspace_beta.waybills
-• public.entity_provisioning_status           • workspace_gamma.projects
-│                                             │
-▼                                             ▼
-┌───────────────────────┐                     ┌───────────────────────┐
-│    PLATFORM OFFICE    │                     │     BIGDROPS ERP      │
-│ (Operations Console)  │                     │   (Business App)      │
-└───────────────────────┘                     └───────────────────────┘
-```
+* **Shared Supabase Database Instance**
+  * Centralized identity and auth schema.
+* **Platform Office (Operations Console)**
+  * Accesses `public` schema tables only (e.g., `workspaces`, `platform_operators`, `entity_provisioning_status`).
+* **BIGDROPS ERP (Business Application)**
+  * Accesses dedicated, isolated client tenant schemas (e.g., `workspace_acme`, `workspace_beta`).
 
 ### The "No-Cross" Data Isolation Rule
-The Platform Office is strictly prohibited from peering into tenant-isolated business schemas (`workspace_xxxx`). It has zero read/write access to tenant transaction records (e.g., invoices, waybills, projects, or documents). Instead, it consumes and operates solely on explicit, high-level operational metadata residing inside the shared `public` schema.
+The Platform Office is strictly prohibited from peering into tenant-isolated business schemas. It has zero read/write access to tenant transaction records (such as invoices, waybills, projects, or documents). Instead, it consumes and operates solely on explicit, high-level operational metadata residing inside the shared `public` schema.
 
 ---
 
@@ -116,4 +103,3 @@ Because this app acts as the system control plane, we implement strict mitigatio
 This software is proprietary and confidential. Unauthorized copying, distribution, or modifications of this repository via any medium is strictly prohibited.
 Copyright © 2026 BIGDROPS Platform. All rights reserved.
 ```
-
