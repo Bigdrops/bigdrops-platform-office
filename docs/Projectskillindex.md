@@ -22,6 +22,21 @@
 | 14 | tailwind-v4-shadcn | Set up and troubleshoot Tailwind CSS v4 with shadcn/ui, theming, and dark-mode workflows. |
 | 15 | typescript-advanced-types | Use advanced TypeScript typing features such as generics, conditional types, and mapped types for safer code. |
 | 16 | zod | Define robust Zod schemas for validation, parsing, and type-safe form and API data handling. |
+| 17 | brandkit | Premium brand-kit image generation for creating high-end identity decks, logo systems, and visual-world presentations. |
+| 18 | design-taste-frontend | Anti-slop frontend skill for landing pages, portfolios, and redesigns that ships interfaces without generic AI aesthetics. |
+| 19 | design-taste-frontend-v1 | Original v1 taste-skill, preserved for backward compatibility with projects depending on its exact behavior. |
+| 20 | full-output-enforcement | Overrides LLM truncation to enforce complete code generation, bans placeholders, and handles token-limit splits cleanly. |
+| 21 | gpt-taste | Elite UX/UI and GSAP Motion Engineer with Python-driven randomization, AIDA page structure, and strict ScrollTrigger patterns. |
+| 22 | high-end-visual-design | Teaches AI to design like a high-end agency with premium fonts, spacing, shadows, cards, and animations. |
+| 23 | image-to-code | Elite website image-to-code skill that generates design images, analyzes them, then implements matching HTML/CSS. |
+| 24 | imagegen-frontend-mobile | Premium mobile app image-generation skill for iOS, Android, and cross-platform product screen concepts. |
+| 25 | imagegen-frontend-web | Elite frontend image-direction skill producing one separate horizontal reference image per landing page section. |
+| 26 | minimalist-ui | Clean editorial-style interfaces using warm monochrome palettes, typographic contrast, and flat bento grids. |
+| 27 | redesign-existing-projects | Upgrades existing websites to premium quality by auditing design and applying high-end standards without breaking functionality. |
+| 28 | stitch-design-taste | Semantic Design System Skill that generates DESIGN.md files enforcing premium, anti-generic UI standards. |
+| 29 | antigravity-awesome-skills | Collection of 1,900+ agentic skills (sickn33/antigravity-awesome-skills) for Claude Code, Cursor, Gemini CLI, and other AI coding assistants — covering development, security, DevOps, data, and product domains. |
+| 30 | valyu-best-practices | Complete Valyu API toolkit for AI agents to perform real-time search across web, academic, medical, and financial sources with citations and deep research. |
+| 31 | vitest | Fast unit testing framework powered by Vite with Jest-compatible API, coverage, mocking, and snapshot support. |
 
 ---
 
