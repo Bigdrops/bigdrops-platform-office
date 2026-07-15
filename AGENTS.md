@@ -1,96 +1,110 @@
 # AGENTS.md
 
-## Project overview
+## Project Overview
 
-Studio Admin is a responsive admin dashboard built with Next.js 16, React 19, TypeScript, Tailwind CSS v4, and shadcn/ui.
+BIGDROPS Platform Office is a high-density, responsive operations console (NOC) built with Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, and shadcn/ui.
 
-This repository uses the shadcn `radix-nova` style. The shadcn CLI reports `base: "radix"`, which refers to Radix UI. Always inspect the local components in `src/components/ui/` because individual wrappers may use different primitives.
+It functions as an isolated SaaS control plane, running independently of the core customer-facing ERP application. It shares only the underlying Supabase backend database and authentication pool.
 
-<!-- BEGIN:nextjs-agent-rules -->
+---
 
-# Next.js: ALWAYS read docs before coding
+## Critical Agent Guardrails
 
-Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+### 1. The "No-Cross" Data Isolation Rule
 
-<!-- END:nextjs-agent-rules -->
+You must never write code, hooks, or queries that attempt to access tenant-specific isolated schemas (`workspace_xxxx`). The Platform Office must remain completely blind to tenant business data.
 
-## shadcn skill
+- **Allowed:** Querying high-level metadata in the `public` schema (e.g., `public.workspaces`, `public.platform_operators`, `public.entity_provisioning_status`).
+- **Prohibited:** Querying or introspecting transactional business tables (e.g., `invoices`, `waybills`, `projects`, `documents`) inside isolated workspace schemas.
 
-Use the shadcn skill for all work involving shadcn/ui components, styling, composition, registries, presets, or `components.json`.
+### 2. Authorization Domain Enforcement
 
-If the skill is not available, install it with:
+Do not use ERP-level workspace permissions or roles. Platform authorization must be handled exclusively by checking roles against `public.platform_operators` (e.g., checking if the user matches `role = 'owner'`).
+
+### 3. Safe-Action Allowlist
+
+Do not write or invoke generic, destructive, or highly privileged database functions. Instead, use the pre-approved RPCs defined in the `public` schema:
+
+- `approve_workspace(p_workspace_id, p_creator_user_id)`
+- `suspend_workspace(p_workspace_id)`
+- `archive_workspace(p_workspace_id)`
+- `recover_workspace(p_workspace_id)`
+
+If a new mutation is needed, it must be defined as a new RPC in the `public` schema and reviewed before implementation.
+
+---
+
+## Setup & Commands
+
+This project uses Bun as its package manager and runtime. Do not use npm or yarn.
 
 ```bash
-npx skills add shadcn/ui
+# Install dependencies
+bun install
+
+# Start the development server
+bun dev
+
+# Build the production application
+bun run build
+
+# Run linting
+bun run lint
 ```
 
-The skill contains the component, styling, composition, accessibility, and CLI rules. Do not duplicate those rules here. Always inspect the local component source before using it.
+---
 
-Do not modify files inside `src/components/ui/` or `src/components/calendar/`. Keep these components intact and apply styling or customization where they are used.
+Co-location-Based Directory Structure
 
-## Setup
+Keep feature code as close as possible to the route that owns it. Do not move screen-specific code into shared directories prematurely.
 
-This project uses npm.
-
-```bash
-npm install
-npm run dev
+```
+src/
+├── app/
+│   ├── (auth)/                  # Login and MFA step-up routes
+│   └── (dashboard)/             # Main layout, shell, and sidebar items
+│       ├── overview/            # NOC home screen / health dashboard
+│       ├── provisioning/        # Tenant lifecycle management screen
+│       │   ├── _components/     # Screen-specific components
+│       │   └── page.tsx         # Provisioning route entry point
+│       └── incidents/           # Platform incident tracking screen
+├── components/                  # Shared application UI components
+│   └── ui/                      # Local shadcn components
+├── hooks/                       # Reusable custom React hooks
+├── lib/                         # Global utility functions and config
+│   └── supabase/                # Supabase client setup and type definitions
+├── styles/                      # Global styles and Tailwind configuration
+└── types/                       # Shared platform-wide TypeScript definitions
 ```
 
-Available commands:
+Supabase imports: The Supabase client is exported from @/lib/supabase/client and types from @/lib/supabase/types.
 
-```bash
-npm run build
-npm run lint
-npm run format
-npm run check
-npm run check:fix
-npm run generate:presets
+---
+
+Designing and Extending Screens
+
+1. Server Components by Default: Keep page files (page.tsx) small, clean, and as Server Components. Extract browser-interactive elements into dedicated Client Components marked with "use client" in the _components/ directory.
+2. High Information Density: The Platform Office is an operations console, not a marketing application. Avoid excessive vertical whitespace. Use highly compact table rows, small text hierarchies, dense grid cards, and clear status indicators to maximize visible data on a single screen.
+3. State Machine UI: When building interfaces to manage workspaces, treat status as transitions inside a state machine (Requested → AwaitingApproval → Provisioning → Active → Suspended → Archived → Purged) rather than straight row updates.
+4. Data Fetching: When fetching data for Platform Office screens, ensure all Supabase queries target only public-schema tables (public.workspaces, public.platform_operators, public.entity_provisioning_status). Never use .from('workspace_xxxx.invoices') or similar. Use public.entity_provisioning_status as the sole source of truth for tenant creation and provisioning health.
+5. Error & Loading States: Always design for slow or failing connections. Implement React Suspense boundaries, skeleton loaders for data tables, empty states with clear calls to action, and descriptive toast errors for failed backend queries.
+
+---
+
+Code Conventions
+
+· TypeScript Strict Mode: Enforced. Use explicit, precise types. Do not use the any type under any circumstances.
+· Import Aliases: Always use @/ path aliases for imports from the src/ directory.
+· Formatting: Adhere to the configured linter and formatter settings. Use double quotes, semicolons, and two-space indentations.
+· Safeguards: Destructive platform operations (such as workspace suspension or tenant purging) must always be built with two-step confirmation modals.
+
+---
+
+Related Documentation
+
+· Platform Office PRD
+· Multi-Tenancy PRD
+
 ```
 
-There is currently no automated test command. Run build, lint, check, or other validation commands only when the user explicitly requests that validation.
-
-## Co-location-based structure
-
-Keep feature code close to the route that owns it.
-
-- Dashboard routes: `src/app/(main)/dashboard/<screen>/page.tsx`
-- Screen-specific components, data, and schemas: `src/app/(main)/dashboard/<screen>/_components/`
-- Shared dashboard components: `src/app/(main)/dashboard/_components/`
-- Shared application components: `src/components/`
-- Local shadcn components: `src/components/ui/`
-- Shared hooks and utilities: `src/hooks/` and `src/lib/`
-- Theme presets: `src/styles/presets/`
-
-Keep a component inside its route until it is reused by another feature. Do not move screen-specific code into a shared directory preemptively.
-
-## Creating or extending a screen
-
-1. Inspect the closest current screen before writing code. Finance, Infrastructure, CRM, and Analytics are useful references. Do not use routes under `(legacy)` as references for new screens unless maintaining a legacy route.
-2. When reproducing a UI from a screenshot or image, follow its visual direction closely, including layout, hierarchy, spacing, component structure, and important details. Implement it with the project's existing components and semantic theme tokens rather than copying raw color values. If the design needs a color that is not available through the existing theme tokens, or the user explicitly requests a non-theme color, use a named color from Tailwind's default palette. Do not use arbitrary hex, RGB, HSL, or OKLCH values.
-3. Reuse the existing dashboard shell, local components, layout controls, and theme tokens.
-4. Break each new page into focused components inside the route's `_components/` directory. Keep `page.tsx` small and focused on composing those pieces.
-5. Keep `page.tsx` as a Server Component by default. Move interactive or browser-dependent code into a dedicated Client Component.
-6. Add the screen to `src/navigation/sidebar/sidebar-items.ts` when it should appear in the dashboard navigation.
-7. Decide the information hierarchy before choosing widgets. Let the content determine the page structure.
-8. Keep the established visual rhythm where it fits: compact spacing, clear typography hierarchy, responsive action rows, and grids that collapse cleanly on smaller screens.
-9. Widget selection is not a fixed formula. Try different arrangements of cards, resource rows, meters, charts, tabs, empty states, and actions, then keep the version that communicates the content clearly and feels consistent with the project.
-10. Match nearby screens in card density, borders, radius, spacing, content width, and responsive behavior.
-11. Use semantic theme tokens so new screens work with light mode, dark mode, and the existing theme presets.
-12. Handle relevant loading, empty, error, disabled, and overflow states.
-13. Keep screens accessible with semantic HTML, keyboard support, visible focus states, labels, and appropriate ARIA attributes.
-
-## Code conventions
-
-- TypeScript strict mode is enabled. Use precise types and avoid `any`.
-- Use the existing `@/` import aliases.
-- Follow the Biome configuration: double quotes, semicolons, two-space indentation, sorted imports, and a 120-character line width.
-- Avoid unnecessary dependencies.
-- Keep changes focused and do not refactor unrelated files.
-
-## Contributions
-
-- Use conventional commit prefixes such as `feat:`, `fix:`, `refactor:`, `docs:`, and `chore:`.
-- Include screenshots for new screens and material visual changes. Include mobile and dark-theme states when relevant.
-- Explain new reusable patterns or dependencies in the pull request.
-- Follow `CONTRIBUTING.md` for the contribution workflow.
+---
