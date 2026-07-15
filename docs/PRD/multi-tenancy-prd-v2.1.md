@@ -5,7 +5,7 @@ Status: Draft
 Version: 2.1
 Date: 2026-07-14
 Supersedes: v2.0
-Repository source: docs/PRD/multi-tenancy-prd.md
+Repository path: docs/PRD/multi-tenancy-prd.md
 
 ---
 
