@@ -10,7 +10,7 @@
 
 ## Overview
 
-This repository contains the **BIGDROPS Platform Office** — a dedicated, high-density Operations Console (NOC) for managing and operating the multi-tenant BIGDROPS SaaS engine.
+This repository contains the **BIGDROPS Platform Office**  a dedicated, high-density Operations Console (NOC) for managing and operating the multi-tenant BIGDROPS SaaS engine.
 
 It is designed as an isolated **SaaS control plane**, running independently of the core customer-facing ERP client application, sharing only the underlying Supabase backend and authentication pool while enforcing strict data segregation.
 
