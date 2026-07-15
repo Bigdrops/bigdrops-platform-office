@@ -1,1 +1,0 @@
-member.user?.raw_user_meta_data
