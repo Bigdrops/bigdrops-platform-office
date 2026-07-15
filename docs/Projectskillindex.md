@@ -37,6 +37,14 @@
 | 29 | antigravity-awesome-skills | Collection of 1,900+ agentic skills (sickn33/antigravity-awesome-skills) for Claude Code, Cursor, Gemini CLI, and other AI coding assistants — covering development, security, DevOps, data, and product domains. |
 | 30 | valyu-best-practices | Complete Valyu API toolkit for AI agents to perform real-time search across web, academic, medical, and financial sources with citations and deep research. |
 | 31 | vitest | Fast unit testing framework powered by Vite with Jest-compatible API, coverage, mocking, and snapshot support. |
+| 32 | audit-logging | Implement centralized audit logging and SIEM integration with configurable log retention and security monitoring. |
+| 33 | auth-implementation-patterns | Build secure, scalable authentication and authorization systems using industry-standard patterns and best practices. |
+| 34 | karpathy-guidelines | Behavioral guidelines to reduce common LLM coding mistakes — overcomplication, surgical changes, assumptions, and verifiable success criteria. |
+| 35 | nextjs-supabase-auth | Expert integration of Supabase Auth with Next.js App Router for authentication and session management. |
+| 36 | ponytail | Forces the laziest solution that actually works — simplest, shortest, most minimal approach to any problem. |
+| 37 | security-audit | Comprehensive security auditing covering web application testing, API security, penetration testing, and hardening. |
+| 38 | test-driven-development | Write tests before implementation code when building any feature or bugfix (TDD workflow). |
+| 39 | using-superpowers | Establishes how to find and use all available skills, requiring skill invocation before any response. |
 
 ---
 
