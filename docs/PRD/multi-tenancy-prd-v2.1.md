@@ -1,3 +1,4 @@
+
 # BIGDROPS Multi-Tenancy — Architecture & Migration PRD (v2.1)
 
 **Type:** Architecture Specification / Migration Plan  
