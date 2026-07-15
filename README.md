@@ -1,79 +1,32 @@
-# BIGDROPS Platform Office (Admin) 🏢
+# BIGDROPS Platform Office (Admin)
 
-This repository contains the **BIGDROPS Platform Office**, a dedicated internal administration application for operating and managing the BIGDROPS SaaS platform. 
-
-It is designed as an isolated SaaS control plane, running independently of the core customer-facing ERP client application.
-
----
-
-## 📐 Architectural Separation of Concerns
-
-The Platform Office and ERP are separate frontend applications that share the same Supabase backend and authentication system while maintaining strict isolation of responsibilities.
-
-
-```
-┌────────────────────────────────────────┐
-│         Shared Supabase Backend        │
-│  (Unified Auth, RLS, DB Schema, RPCs)  │
-└───────────────────┬────────────────────┘
-│
-┌────────────────┴────────────────┐
-▼                                 ▼
-┌──────────────────────────┐      ┌──────────────────────────┐
-│      ERP Application     │      │     Platform Office      │
-│  https://bigdrops.app    │      │  https://admin.bigdrops  │
-│                          │      │                          │
-│ 🛠️ Customer Business     │      │ ⚙️ Platform Operations    │
-│  - Workspaces / Tenants  │      │  - Workspace Governance  │
-│  - Daily Business Flows  │      │  - Support Diagnostics   │
-│  - Document Management   │      │  - Operational Metrics   │
-└──────────────────────────┘      └──────────────────────────┘
-```
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Bun](https://img.shields.io/badge/Bun-1.0-white?style=flat-square&logo=bun&logoColor=black)](https://bun.sh/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-Proprietary-red?style=flat-square)](LICENSE)
 
 ---
 
-## 🎯 Core Responsibilities
+## Overview
 
-- **Workspace Lifecycle:** Approval, suspension, restoration, archival, diagnostics, and purge workflows.
-- **Platform Users:** Managing administrative roles, support operators, and user lookup.
-- **Support Tooling:** Access inspection, entity diagnostics, activity logs, and permission checks.
-- **Feature Management:** Administering feature flags, gradual rollouts, and beta programs.
-- **System Monitoring:** Background queue health, storage metrics, and API latency charts.
-- **Audit Center:** Administrative actions, security logs, and approval histories.
+This repository contains the **BIGDROPS Platform Office** — a dedicated, high-density Operations Console (NOC) for managing and operating the multi-tenant BIGDROPS SaaS engine.
+
+It is designed as an isolated **SaaS control plane**, running independently of the core customer-facing ERP client application, sharing only the underlying Supabase backend and authentication pool while enforcing strict data segregation.
 
 ---
 
-## 🛠️ Technology Stack & Dev Workflow
+## Table of Contents
 
-- **Framework:** Next.js 15 (App Router)
-- **Styling:** Tailwind CSS & Shadcn UI
-- **State Management:** Zustand & React Query
-- **Package Manager / Runtime:** [Bun](https://bun.sh/) 🚀
-
-### Getting Started
-
-Ensure you have [Bun installed](https://bun.sh/).
-
-1. **Install dependencies (at lightning speed):**
-   ```bash
-   bun install
-
-```
- 2. **Run the development server:**
-   ```bash
-   bun dev
-   
-   ```
- 3. **Production Build:**
-   ```bash
-   bun run build
-   
-   ```
-## 🔒 Security & Backend Enforcement
- 1. **Authentication:** Shares the core Supabase authentication system (Single Identity plane).
- 2. **Authorization:** Access is determined strictly via backend verification (Custom JWT User Claims or DB role mappings). The frontend is *never* the single source of truth for administrative authorization.
- 3. **Operational Safeguards:** Destructive platform operations are locked behind explicit two-step confirmation modals, soft-delete rules, and recovery windows.
-```
+- [Architectural Separation of Concerns](#architectural-separation-of-concerns)
+- [Core Responsibilities](#core-responsibilities)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+- [Security & Operator Safeguards](#security--operator-safeguards)
+- [License](#license)
 
 ---
 
+## Architectural Separation of Concerns
+
+The Platform Office and the ERP are separate frontend applications that share the same Supabase backend database and authentication pool, but enforce complete segregation of operational duties and data visibility.
