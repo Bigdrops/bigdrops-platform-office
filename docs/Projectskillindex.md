@@ -1,6 +1,6 @@
 # Project Skill Index
 
-**Last Updated:** 2026-07-15
+**Last Updated:** 2026-07-16
 
 ---
 
@@ -45,6 +45,7 @@
 | 37 | security-audit | Comprehensive security auditing covering web application testing, API security, penetration testing, and hardening. |
 | 38 | test-driven-development | Write tests before implementation code when building any feature or bugfix (TDD workflow). |
 | 39 | using-superpowers | Establishes how to find and use all available skills, requiring skill invocation before any response. |
+| 40 | database-migrations-sql-migrations | SQL database migrations with zero-downtime strategies for PostgreSQL, MySQL, and SQL Server. Focus on data integrity and rollback plans. |
 
 ---
 

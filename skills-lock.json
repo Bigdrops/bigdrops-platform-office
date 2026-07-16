@@ -34,6 +34,12 @@
       "sourceType": "autoskills-registry",
       "computedHash": "c124390cc3441844903ada94cb5820b23d922f2d0ad34e01e029e410197c8a32"
     },
+    "database-migrations-sql-migrations": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/database-migrations-sql-migrations/SKILL.md",
+      "computedHash": "6fb7c972d98d13a6340a06097ce6c4c530fdf97ebc67016e1de8b8d1c90b151a"
+    },
     "design-taste-frontend": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
