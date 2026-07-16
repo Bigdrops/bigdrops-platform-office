@@ -1,10 +1,4 @@
-export interface IncidentSummary {
-  id: string;
-  title: string;
-  severity: string;
-  status: string;
-  createdAt: string | null;
-}
+import type { IncidentSummary } from "@/types/domain/incident-types";
 
 import { getSupabase } from "./client";
 

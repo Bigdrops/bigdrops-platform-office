@@ -22,8 +22,9 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Kbd } from "@/components/ui/kbd";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { UserRow } from "@/types/domain/user-types";
 
-import { filters, type UserRow } from "./data";
+import { filters } from "./data";
 import { usersColumns } from "./users-columns";
 import { UsersTable } from "./users-table";
 

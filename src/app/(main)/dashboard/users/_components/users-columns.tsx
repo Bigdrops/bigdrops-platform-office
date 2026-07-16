@@ -17,8 +17,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, getInitials } from "@/lib/utils";
+import type { UserRow } from "@/types/domain/user-types";
 
-import { statusMeta, type UserRow } from "./data";
+import { statusMeta } from "./data";
 
 function RoleCell({ role, team }: { role: string; team: string }) {
   return (

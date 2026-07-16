@@ -1,28 +1,6 @@
-export type UserStatus = "Active" | "Pending invite" | "Deactivated" | "Locked" | "Suspended";
+import { USER_TEAM_VALUES, type UserRow, type UserStatus } from "@/types/domain/user-types";
 
-const teamValues = [
-  "Platform",
-  "Growth",
-  "Revenue",
-  "Customer Ops",
-  "Internal Tools",
-  "Compliance",
-  "People Ops",
-  "Finance",
-] as const;
-
-export type UserTeam = (typeof teamValues)[number];
-
-export type UserRow = {
-  email: string;
-  joinedDate: string;
-  lastActive: number;
-  name: string;
-  role: string;
-  status: UserStatus;
-  team: UserTeam;
-  workspace: string[];
-};
+const teamValues = USER_TEAM_VALUES;
 
 export const filters = {
   role: [

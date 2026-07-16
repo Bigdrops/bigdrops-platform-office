@@ -1,4 +1,4 @@
-import type { UserRow } from "@/app/(main)/dashboard/users/_components/data";
+import type { UserRow } from "@/types/domain/user-types";
 
 import { getSupabase } from "./client";
 
