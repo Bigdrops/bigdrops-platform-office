@@ -3,6 +3,8 @@
 
 import * as React from "react";
 
+import { useRouter } from "next/navigation";
+
 import { CheckCircle, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -39,23 +41,32 @@ interface LifecycleScreenProps {
 }
 
 export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
+  const router = useRouter();
   const [workspaces, setWorkspaces] = React.useState(initialWorkspaces);
-  const [loading, setLoading] = React.useState<string | null>(null);
+  const [loadingIds, setLoadingIds] = React.useState<Set<string>>(new Set());
 
   async function handleAction(action: LifecycleAction, workspace: LifecycleWorkspace) {
-    setLoading(workspace.id);
+    setLoadingIds((prev) => new Set(prev).add(workspace.id));
     let success = false;
 
-    switch (action) {
-      case "approve":
-        success = await approveWorkspace(workspace.id, workspace.creatorUserId);
-        break;
-      case "suspend":
-        success = await suspendWorkspace(workspace.id);
-        break;
-      case "archive":
-        success = await archiveWorkspace(workspace.id);
-        break;
+    try {
+      switch (action) {
+        case "approve":
+          success = await approveWorkspace(workspace.id, workspace.creatorUserId);
+          break;
+        case "suspend":
+          success = await suspendWorkspace(workspace.id);
+          break;
+        case "archive":
+          success = await archiveWorkspace(workspace.id);
+          break;
+      }
+    } finally {
+      setLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(workspace.id);
+        return next;
+      });
     }
 
     if (success) {
@@ -75,12 +86,10 @@ export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
         }),
       );
     }
-
-    setLoading(null);
   }
 
   function handleRefresh() {
-    window.location.reload();
+    router.refresh();
   }
 
   return (
@@ -130,7 +139,7 @@ export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
                     variant: "outline" as const,
                   };
                   const validActions = getValidActions(workspace.status);
-                  const isRowLoading = loading === workspace.id;
+                  const isRowLoading = loadingIds.has(workspace.id);
 
                   return (
                     <TableRow key={workspace.id}>
