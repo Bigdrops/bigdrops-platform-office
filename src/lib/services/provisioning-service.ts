@@ -1,4 +1,4 @@
-import type { FailedProvisioning, ProvisioningStatusCounts } from "@/types/domain/provisioning-types";
+import type { FailedProvisioning, ProvisioningStatusCounts } from "@/types/domain/provisioning";
 
 import { getSupabase } from "./client";
 

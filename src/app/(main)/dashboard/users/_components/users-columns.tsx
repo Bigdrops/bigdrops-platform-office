@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, getInitials } from "@/lib/utils";
-import type { UserRow } from "@/types/domain/user-types";
+import type { UserRow } from "@/types/domain/user";
 
 import { statusMeta } from "./data";
 

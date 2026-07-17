@@ -1,4 +1,4 @@
-import { USER_TEAM_VALUES, type UserRow, type UserStatus } from "@/types/domain/user-types";
+import { USER_TEAM_VALUES, type UserRow, type UserStatus } from "@/types/domain/user";
 
 const teamValues = USER_TEAM_VALUES;
 

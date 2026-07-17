@@ -1,4 +1,4 @@
-import type { UserRow } from "@/types/domain/user-types";
+import type { UserRow } from "@/types/domain/user";
 
 import { getSupabase } from "./client";
 

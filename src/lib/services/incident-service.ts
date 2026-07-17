@@ -1,4 +1,4 @@
-import type { IncidentSummary } from "@/types/domain/incident-types";
+import type { IncidentSummary } from "@/types/domain/incident";
 
 import { getSupabase } from "./client";
 

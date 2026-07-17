@@ -1,4 +1,4 @@
-import type { WorkspaceStatusCounts, WorkspaceSummary } from "@/types/domain/workspace-types";
+import type { WorkspaceStatusCounts, WorkspaceSummary } from "@/types/domain/workspace";
 
 import { getSupabase } from "./client";
 
