@@ -1,4 +1,4 @@
-import type { WorkspaceStatusCounts, WorkspaceSummary } from "@/types/domain/workspace";
+import type { LifecycleWorkspace, WorkspaceStatusCounts, WorkspaceSummary } from "@/types/domain/workspace";
 
 import { getSupabase } from "./client";
 
@@ -70,5 +70,87 @@ export async function getPendingWorkspaces(): Promise<WorkspaceSummary[]> {
     }));
   } catch {
     return [];
+  }
+}
+
+/**
+ * Fetch all workspaces for lifecycle management.
+ * Returns empty array on failure.
+ */
+export async function getAllWorkspaces(): Promise<LifecycleWorkspace[]> {
+  const supabase = await getSupabase();
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("id, name, status, created_at, creator_user_id")
+      .order("created_at", { ascending: false });
+
+    if (error) return [];
+    return (data || []).map((w) => ({
+      id: w.id,
+      name: w.name,
+      status: w.status,
+      createdAt: w.created_at,
+      creatorUserId: w.creator_user_id,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Approve a pending workspace via RPC.
+ * Returns true on success, false on failure.
+ */
+export async function approveWorkspace(workspaceId: string, creatorUserId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.rpc("approve_workspace", {
+      p_workspace_id: workspaceId,
+      p_creator_user_id: creatorUserId,
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Suspend an active workspace via RPC.
+ * Returns true on success, false on failure.
+ */
+export async function suspendWorkspace(workspaceId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.rpc("suspend_workspace", {
+      p_workspace_id: workspaceId,
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Archive a workspace via RPC.
+ * Returns true on success, false on failure.
+ */
+export async function archiveWorkspace(workspaceId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.rpc("archive_workspace", {
+      p_workspace_id: workspaceId,
+    });
+    return !error;
+  } catch {
+    return false;
   }
 }
