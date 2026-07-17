@@ -12,3 +12,13 @@ export interface WorkspaceSummary {
   status: string;
   createdAt: string | null;
 }
+
+export interface LifecycleWorkspace {
+  id: string;
+  name: string;
+  status: string;
+  createdAt: string | null;
+  creatorUserId: string;
+}
+
+export type LifecycleAction = "approve" | "suspend" | "archive";
