@@ -154,3 +154,21 @@ export async function archiveWorkspace(workspaceId: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Recover a suspended workspace via RPC.
+ * Returns true on success, false on failure.
+ */
+export async function recoverWorkspace(workspaceId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.rpc("recover_workspace", {
+      p_workspace_id: workspaceId,
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}

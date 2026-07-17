@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, CheckCircle, Pause } from "lucide-react";
+import { Archive, CheckCircle, Pause, RefreshCw } from "lucide-react";
 
 import {
   AlertDialog,
@@ -48,6 +48,13 @@ const actionConfigs: Record<LifecycleAction, LifecycleActionConfig> = {
     buttonVariant: "destructive",
     actionLabel: "Archive Workspace",
   },
+  recover: {
+    label: "Recover",
+    description: "This will restore a suspended workspace to active status.",
+    icon: RefreshCw,
+    buttonVariant: "default",
+    actionLabel: "Recover Workspace",
+  },
 };
 
 interface LifecycleAlertDialogProps {
@@ -55,16 +62,23 @@ interface LifecycleAlertDialogProps {
   workspaceName: string;
   onConfirm: () => void;
   disabled?: boolean;
+  loading?: boolean;
 }
 
-export function LifecycleAlertDialog({ action, workspaceName, onConfirm, disabled }: LifecycleAlertDialogProps) {
+export function LifecycleAlertDialog({
+  action,
+  workspaceName,
+  onConfirm,
+  disabled,
+  loading,
+}: LifecycleAlertDialogProps) {
   const config = actionConfigs[action];
   const Icon = config.icon;
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant={config.buttonVariant === "default" ? "outline" : "ghost"} size="sm" disabled={disabled}>
+        <Button variant={config.buttonVariant === "default" ? "outline" : "ghost"} size="sm" disabled={disabled ?? loading}>
           <Icon className="size-3.5" />
           {config.label}
         </Button>
@@ -81,8 +95,8 @@ export function LifecycleAlertDialog({ action, workspaceName, onConfirm, disable
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant={config.buttonVariant} onClick={onConfirm}>
-            {config.actionLabel}
+          <AlertDialogAction variant={config.buttonVariant} onClick={onConfirm} disabled={loading}>
+            {loading ? "Processing..." : config.actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

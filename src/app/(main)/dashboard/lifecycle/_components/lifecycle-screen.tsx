@@ -5,13 +5,18 @@ import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
-import { CheckCircle, RefreshCw } from "lucide-react";
+import { AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { approveWorkspace, archiveWorkspace, suspendWorkspace } from "@/lib/services/workspace-service";
+import {
+  approveWorkspace,
+  archiveWorkspace,
+  recoverWorkspace,
+  suspendWorkspace,
+} from "@/lib/services/workspace-service";
 import type { LifecycleAction, LifecycleWorkspace } from "@/types/domain/workspace";
 
 import { LifecycleAlertDialog } from "./lifecycle-actions";
@@ -23,32 +28,29 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   archived: { label: "Archived", variant: "outline" },
 };
 
-function getValidActions(status: string): LifecycleAction[] {
-  switch (status) {
-    case "pending_approval":
-      return ["approve"];
-    case "active":
-      return ["suspend", "archive"];
-    case "suspended":
-      return ["archive"];
-    default:
-      return [];
-  }
-}
+const validTransitions: Record<string, LifecycleAction[]> = {
+  pending_approval: ["approve"],
+  active: ["suspend", "archive"],
+  suspended: ["recover", "archive"],
+  archived: [],
+};
 
 interface LifecycleScreenProps {
   initialWorkspaces: LifecycleWorkspace[];
+  error?: string;
 }
 
-export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
+export function LifecycleScreen({ initialWorkspaces, error }: LifecycleScreenProps) {
   const router = useRouter();
-  const [workspaces, setWorkspaces] = React.useState(initialWorkspaces);
-  const [loadingIds, setLoadingIds] = React.useState<Set<string>>(new Set());
+  const workspaces = initialWorkspaces;
+  const [loadingId, setLoadingId] = React.useState<string | null>(null);
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
   async function handleAction(action: LifecycleAction, workspace: LifecycleWorkspace) {
-    setLoadingIds((prev) => new Set(prev).add(workspace.id));
-    let success = false;
+    setLoadingId(workspace.id);
+    setActionError(null);
 
+    let success = false;
     try {
       switch (action) {
         case "approve":
@@ -57,39 +59,31 @@ export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
         case "suspend":
           success = await suspendWorkspace(workspace.id);
           break;
+        case "recover":
+          success = await recoverWorkspace(workspace.id);
+          break;
         case "archive":
           success = await archiveWorkspace(workspace.id);
           break;
       }
     } finally {
-      setLoadingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(workspace.id);
-        return next;
-      });
+      setLoadingId(null);
     }
 
     if (success) {
-      setWorkspaces((prev) =>
-        prev.map((w) => {
-          if (w.id !== workspace.id) return w;
-          switch (action) {
-            case "approve":
-              return { ...w, status: "active" };
-            case "suspend":
-              return { ...w, status: "suspended" };
-            case "archive":
-              return { ...w, status: "archived" };
-            default:
-              return w;
-          }
-        }),
-      );
+      router.refresh();
+    } else {
+      setActionError("Action failed");
     }
   }
 
-  function handleRefresh() {
-    router.refresh();
+  if (error) {
+    return (
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+        <AlertTriangle className="mx-auto mb-2 size-6 text-destructive" />
+        <p className="text-destructive text-sm">Failed to load workspaces: {error}</p>
+      </div>
+    );
   }
 
   return (
@@ -103,6 +97,12 @@ export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
         </p>
       </div>
 
+      {actionError && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-destructive text-sm">
+          {actionError}
+        </div>
+      )}
+
       <Card>
         <CardHeader className="border-b">
           <CardTitle className="text-xl leading-none">Workspaces</CardTitle>
@@ -110,7 +110,7 @@ export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
             {workspaces.length} workspace{workspaces.length !== 1 ? "s" : ""} total. Actions require confirmation.
           </CardDescription>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <Button variant="outline" size="sm" onClick={() => router.refresh()}>
               <RefreshCw className="size-3.5" />
               Refresh
             </Button>
@@ -123,61 +123,113 @@ export function LifecycleScreen({ initialWorkspaces }: LifecycleScreenProps) {
               <p className="text-sm">No workspaces found.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Desktop Table */}
+              <div className="hidden lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {workspaces.map((workspace) => {
+                      const statusInfo = statusConfig[workspace.status] ?? {
+                        label: workspace.status,
+                        variant: "outline" as const,
+                      };
+                      const actions = validTransitions[workspace.status] || [];
+                      const isLoading = loadingId === workspace.id;
+                      return (
+                        <TableRow key={workspace.id}>
+                          <TableCell className="font-medium">{workspace.name}</TableCell>
+                          <TableCell>
+                            <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {workspace.createdAt
+                              ? new Date(workspace.createdAt).toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {actions.length === 0 ? (
+                              <span className="text-muted-foreground text-xs">No actions</span>
+                            ) : (
+                              <div className="flex justify-end gap-1">
+                                {actions.map((action) => (
+                                  <LifecycleAlertDialog
+                                    key={action}
+                                    action={action}
+                                    workspaceName={workspace.name}
+                                    onConfirm={() => handleAction(action, workspace)}
+                                    disabled={!!loadingId}
+                                    loading={isLoading}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="space-y-3 p-4 lg:hidden">
                 {workspaces.map((workspace) => {
                   const statusInfo = statusConfig[workspace.status] ?? {
                     label: workspace.status,
                     variant: "outline" as const,
                   };
-                  const validActions = getValidActions(workspace.status);
-                  const isRowLoading = loadingIds.has(workspace.id);
-
+                  const actions = validTransitions[workspace.status] || [];
+                  const isLoading = loadingId === workspace.id;
                   return (
-                    <TableRow key={workspace.id}>
-                      <TableCell className="font-medium">{workspace.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {workspace.createdAt
-                          ? new Date(workspace.createdAt).toLocaleDateString("en-GB", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {validActions.length === 0 ? (
-                          <span className="text-muted-foreground text-xs">No actions</span>
-                        ) : (
-                          <div className="flex justify-end gap-1">
-                            {validActions.map((action) => (
+                    <Card key={workspace.id}>
+                      <CardContent className="space-y-3 p-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-medium">{workspace.name}</p>
+                            <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                          </div>
+                          <span className="text-muted-foreground text-xs">
+                            {workspace.createdAt
+                              ? new Date(workspace.createdAt).toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </span>
+                        </div>
+                        {actions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 border-t pt-2">
+                            {actions.map((action) => (
                               <LifecycleAlertDialog
                                 key={action}
                                 action={action}
                                 workspaceName={workspace.name}
                                 onConfirm={() => handleAction(action, workspace)}
-                                disabled={isRowLoading}
+                                disabled={!!loadingId}
+                                loading={isLoading}
                               />
                             ))}
                           </div>
                         )}
-                      </TableCell>
-                    </TableRow>
+                      </CardContent>
+                    </Card>
                   );
                 })}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

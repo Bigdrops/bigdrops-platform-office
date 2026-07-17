@@ -21,4 +21,4 @@ export interface LifecycleWorkspace {
   creatorUserId: string;
 }
 
-export type LifecycleAction = "approve" | "suspend" | "archive";
+export type LifecycleAction = "approve" | "suspend" | "archive" | "recover";

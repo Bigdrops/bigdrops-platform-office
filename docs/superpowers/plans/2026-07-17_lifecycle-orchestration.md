@@ -53,16 +53,10 @@ export interface WorkspaceLifecycle extends WorkspaceSummary {
   creatorUserId: string;
 }
 
-export type LifecycleAction = 'approve' | 'suspend' | 'recover' | 'archive';
+export type LifecycleAction = 'approve' | 'suspend' | 'archive' | 'recover';
 ```
 
-· Step 2: Run typecheck: bunx tsc --noEmit — expected: no errors
-· Step 3: Commit
-
-```bash
-git add src/types/domain/workspace.ts
-git commit -m "feat: add LifecycleAction type and WorkspaceLifecycle interface"
-```
+· Step 2: Run typecheck: npx tsc --noEmit — expected: no errors
 
 ---
 
@@ -180,13 +174,7 @@ export async function archiveWorkspace(workspaceId: string): Promise<ServiceResu
 import type { WorkspaceLifecycle, WorkspaceStatusCounts, WorkspaceSummary } from '@/types/domain/workspace';
 ```
 
-· Step 4: Run typecheck: bunx tsc --noEmit — expected: no errors
-· Step 5: Commit
-
-```bash
-git add src/lib/services/workspace-service.ts
-git commit -m "feat: add getAllWorkspaces query and approve/suspend/recover/archive mutations"
-```
+· Step 4: Run typecheck: npx tsc --noEmit — expected: no errors
 
 ---
 
@@ -194,13 +182,7 @@ Task 3: Create lifecycle actions confirmation component
 
 Files: Create src/app/(main)/dashboard/lifecycle/_components/lifecycle-actions.tsx
 
-· Step 1: Create _components directory
-
-```bash
-mkdir -p "src/app/(main)/dashboard/lifecycle/_components"
-```
-
-· Step 2: Create lifecycle-actions.tsx
+· Step 1: Create lifecycle-actions.tsx (directory _components already exists)
 
 ```tsx
 'use client';
@@ -306,13 +288,7 @@ export function LifecycleAlertDialog({
 }
 ```
 
-· Step 3: Run typecheck: bunx tsc --noEmit — expected: no errors
-· Step 4: Commit
-
-```bash
-git add src/app/\(main\)/dashboard/lifecycle/_components/lifecycle-actions.tsx
-git commit -m "feat: add LifecycleAlertDialog confirmation component"
-```
+· Step 2: Run typecheck: npx tsc --noEmit — expected: no errors
 
 ---
 
@@ -548,13 +524,7 @@ export function LifecycleScreen({ initialWorkspaces, error }: LifecycleScreenPro
 }
 ```
 
-· Step 2: Run typecheck: bunx tsc --noEmit — expected: no errors
-· Step 3: Commit
-
-```bash
-git add src/app/\(main\)/dashboard/lifecycle/_components/lifecycle-screen.tsx
-git commit -m "feat: add LifecycleScreen with desktop table + mobile cards and router.refresh"
-```
+· Step 2: Run typecheck: npx tsc --noEmit — expected: no errors
 
 ---
 
@@ -578,23 +548,15 @@ export default async function LifecyclePage() {
 }
 ```
 
-· Step 2: Run typecheck: bunx tsc --noEmit — expected: no errors
-· Step 3: Run build: bun run build — expected: build succeeds with /dashboard/lifecycle route listed
-· Step 4: Commit
-
-```bash
-git add src/app/\(main\)/dashboard/lifecycle/page.tsx
-git commit -m "feat: replace lifecycle placeholder with functional orchestration screen"
-```
+· Step 2: Run typecheck: npx tsc --noEmit — expected: no errors
 
 ---
 
-Task 6: Final verification and report
+Task 5: Final verification and report
 
-· Step 1: Run full typecheck: bunx tsc --noEmit — expected: no errors
-· Step 2: Run full build: bun run build — expected: build succeeds, all routes compile
-· Step 3: Verify git status: git status — expected: only intended files modified/created
-· Step 4: Write report at docs/Reports/architecture/YYYY-MM-DD_lifecycle-orchestration.md
+· Step 1: Run typecheck: npx tsc --noEmit — expected: no errors
+· Step 2: Verify git status — expected: only intended files modified
+· Step 3: Write report at docs/Reports/architecture/YYYY-MM-DD_lifecycle-orchestration.md
 
 Include:
 
