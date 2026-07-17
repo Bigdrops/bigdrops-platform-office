@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -44,12 +46,14 @@ interface NavItemProps {
   readonly isItemActive: (item: NavMainItem) => boolean;
   readonly isSubItemActive: (url: string) => boolean;
   readonly isSubmenuOpen: (item: NavMainParentItem) => boolean;
+  readonly closeMobile: () => void;
 }
 
 interface NavLinkItemProps {
   readonly item: NavMainLinkItem;
   readonly isActive: boolean;
   readonly showIconFallback: boolean;
+  readonly closeMobile: () => void;
 }
 
 interface NavLinkIconProps {
@@ -61,6 +65,7 @@ interface NavDropdownItemProps {
   readonly item: NavMainParentItem;
   readonly isActive: boolean;
   readonly isSubItemActive: (url: string) => boolean;
+  readonly closeMobile: () => void;
 }
 
 interface NavCollapsibleItemProps {
@@ -68,6 +73,7 @@ interface NavCollapsibleItemProps {
   readonly isActive: boolean;
   readonly defaultOpen: boolean;
   readonly isSubItemActive: (url: string) => boolean;
+  readonly closeMobile: () => void;
 }
 
 function CollapsedIconFallback({ title }: { title: string }) {
@@ -84,6 +90,11 @@ function hasSubItems(item: NavMainItem): item is NavMainParentItem {
 
 export function NavMain({ items }: NavMainProps) {
   const path = usePathname();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const closeMobile = React.useCallback(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [isMobile, setOpenMobile]);
 
   const isItemActive = (item: NavMainItem) => {
     if (hasSubItems(item)) {
@@ -142,6 +153,7 @@ export function NavMain({ items }: NavMainProps) {
                   isItemActive={isItemActive}
                   isSubItemActive={isSubItemActive}
                   isSubmenuOpen={isSubmenuOpen}
+                  closeMobile={closeMobile}
                 />
               ))}
             </SidebarMenu>
@@ -152,16 +164,16 @@ export function NavMain({ items }: NavMainProps) {
   );
 }
 
-function NavItem({ item, isItemActive, isSubItemActive, isSubmenuOpen }: NavItemProps) {
+function NavItem({ item, isItemActive, isSubItemActive, isSubmenuOpen, closeMobile }: NavItemProps) {
   const { state, isMobile } = useSidebar();
   const isCollapsedDesktop = state === "collapsed" && !isMobile;
 
   if (!hasSubItems(item)) {
-    return <NavLinkItem item={item} isActive={isItemActive(item)} showIconFallback={isCollapsedDesktop} />;
+    return <NavLinkItem item={item} isActive={isItemActive(item)} showIconFallback={isCollapsedDesktop} closeMobile={closeMobile} />;
   }
 
   if (isCollapsedDesktop) {
-    return <NavDropdownItem item={item} isActive={isItemActive(item)} isSubItemActive={isSubItemActive} />;
+    return <NavDropdownItem item={item} isActive={isItemActive(item)} isSubItemActive={isSubItemActive} closeMobile={closeMobile} />;
   }
 
   return (
@@ -170,11 +182,12 @@ function NavItem({ item, isItemActive, isSubItemActive, isSubmenuOpen }: NavItem
       isActive={isItemActive(item)}
       defaultOpen={isSubmenuOpen(item)}
       isSubItemActive={isSubItemActive}
+      closeMobile={closeMobile}
     />
   );
 }
 
-function NavLinkItem({ item, isActive, showIconFallback }: NavLinkItemProps) {
+function NavLinkItem({ item, isActive, showIconFallback, closeMobile }: NavLinkItemProps) {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild aria-disabled={item.disabled} tooltip={item.title} isActive={isActive}>
@@ -183,6 +196,7 @@ function NavLinkItem({ item, isActive, showIconFallback }: NavLinkItemProps) {
           href={item.url}
           target={item.newTab ? "_blank" : undefined}
           rel={item.newTab ? "noreferrer" : undefined}
+          onClick={closeMobile}
         >
           <NavLinkIcon item={item} showFallback={showIconFallback} />
           <span>{item.title}</span>
@@ -207,7 +221,7 @@ function NavLinkIcon({ item, showFallback }: NavLinkIconProps) {
   return null;
 }
 
-function NavDropdownItem({ item, isActive, isSubItemActive }: NavDropdownItemProps) {
+function NavDropdownItem({ item, isActive, isSubItemActive, closeMobile }: NavDropdownItemProps) {
   const Icon = item.icon;
 
   return (
@@ -234,6 +248,7 @@ function NavDropdownItem({ item, isActive, isSubItemActive }: NavDropdownItemPro
                     rel={subItem.newTab ? "noreferrer" : undefined}
                     aria-current={isSubItemActive(subItem.url) ? "page" : undefined}
                     className="flex items-center gap-2"
+                    onClick={closeMobile}
                   >
                     {SubIcon && <SubIcon />}
                     <span>{subItem.title}</span>
@@ -248,7 +263,7 @@ function NavDropdownItem({ item, isActive, isSubItemActive }: NavDropdownItemPro
   );
 }
 
-function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive }: NavCollapsibleItemProps) {
+function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive, closeMobile }: NavCollapsibleItemProps) {
   const Icon = item.icon;
 
   return (
@@ -280,6 +295,7 @@ function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive }: Na
                       href={subItem.url}
                       target={subItem.newTab ? "_blank" : undefined}
                       rel={subItem.newTab ? "noreferrer" : undefined}
+                      onClick={closeMobile}
                     >
                       {SubIcon && <SubIcon />}
                       <span>{subItem.title}</span>

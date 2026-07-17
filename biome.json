@@ -35,6 +35,8 @@
       "**",
       "!.github",
       "!.husky",
+      "!.agents",
+      "!.claude",
       "!node_modules",
       "!.next",
       "!dist",

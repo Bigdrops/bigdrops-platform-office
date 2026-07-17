@@ -1,16 +1,11 @@
+import * as React from "react";
 import type { ReactNode } from "react";
 
 import { cookies } from "next/headers";
-import Link from "next/link";
-
-import { siGithub } from "simple-icons";
 
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
-import { SimpleIcon } from "@/components/simple-icon";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { users } from "@/data/users";
 import { cn } from "@/lib/utils";
 import { getPreference } from "@/server/server-actions";
 
@@ -66,18 +61,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
             <div className="flex items-center gap-2">
               <LayoutControls />
               <ThemeSwitcher />
-              <Button asChild size="icon">
-                <Link
-                  prefetch={false}
-                  href="https://github.com/arhamkhnz/next-shadcn-admin-dashboard"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Open GitHub repository"
-                >
-                  <SimpleIcon icon={siGithub} className="fill-primary-foreground" />
-                </Link>
-              </Button>
-              <AccountSwitcher users={users} />
+              <AccountSwitcher users={[]} />
             </div>
           </div>
         </header>

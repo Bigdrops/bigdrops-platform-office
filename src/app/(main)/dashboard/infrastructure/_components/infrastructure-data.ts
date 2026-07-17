@@ -33,7 +33,7 @@ export const infrastructureGroups: InfrastructureGroup[] = [
     organization: "Weblabs Studio",
     rows: [
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/dashboard",
+        domain: "console.bigdrops-platform.io/dashboard",
         platform: {
           name: "Next.js",
           icon: siNextdotjs,
@@ -54,7 +54,7 @@ export const infrastructureGroups: InfrastructureGroup[] = [
     organization: "Aiy Cap",
     rows: [
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/analytics",
+        domain: "analytics.bigdrops-platform.io",
         platform: {
           name: "React",
           icon: siReact,
@@ -69,7 +69,7 @@ export const infrastructureGroups: InfrastructureGroup[] = [
         resources: { cpu: 49, ram: 42, disk: 44 },
       },
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/reports",
+        domain: "reports.bigdrops-platform.io",
         platform: {
           name: "Remix",
           icon: siRemix,
@@ -90,7 +90,7 @@ export const infrastructureGroups: InfrastructureGroup[] = [
     organization: "Storeframe",
     rows: [
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/kanban",
+        domain: "tasks.bigdrops-platform.io",
         platform: {
           name: "Node.js",
           icon: siNodedotjs,
