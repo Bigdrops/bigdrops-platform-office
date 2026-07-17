@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Archive, CheckCircle, Pause } from "lucide-react";
+import { Archive, CheckCircle, Pause } from "lucide-react";
 
 import {
   AlertDialog,
